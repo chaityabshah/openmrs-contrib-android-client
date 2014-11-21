@@ -49,6 +49,11 @@ public class PatientDashboardActivity extends ACBaseActivity implements ActionBa
     private ViewPager mViewPager;
     private PatientDashboardPagerAdapter mPatientDashboardPagerAdapter;
     private ProgressDialog mDialog;
+    private DialogAction mDialogAction;
+
+    public enum DialogAction {
+        SYNCHRONIZE, ADD_VISIT
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,12 +140,17 @@ public class PatientDashboardActivity extends ACBaseActivity implements ActionBa
     }
 
     private void synchronizePatient() {
+        showProgressDialog(R.string.action_synchronize_patients, DialogAction.SYNCHRONIZE);
+        new FindPatientsManager(this).getFullPatientData(mPatient.getUuid());
+    }
+
+    public void showProgressDialog(int resId, DialogAction dialogAction) {
         mDialog = new ProgressDialog(this);
-        mDialog.setMessage(getString(R.string.action_synchronize_patients));
+        mDialog.setMessage(getString(resId));
         mDialog.setIndeterminate(false);
         mDialog.setCancelable(false);
         mDialog.show();
-        new FindPatientsManager(this).getFullPatientData(mPatient.getUuid());
+        mDialogAction = dialogAction;
     }
 
     public void updatePatientDetailsData(final Patient patient) {
@@ -154,7 +164,7 @@ public class PatientDashboardActivity extends ACBaseActivity implements ActionBa
                     PatientDetailsFragment fragment = (PatientDetailsFragment) getSupportFragmentManager().getFragments().get(PatientDashboardActivity.TabHost.DETAILS_TAB_POS);
                     fragment.reloadPatientData(mPatient);
 
-                    fvm.findActiveVisitsForPatientByUUID(patient.getUuid(), mPatient.getId());
+                    fvm.findVisitsByPatientUUID(patient.getUuid(), mPatient.getId());
                 }
             };
             thread.start();
@@ -174,15 +184,29 @@ public class PatientDashboardActivity extends ACBaseActivity implements ActionBa
 
     public void stopLoader(boolean errorOccurred) {
         mDialog.dismiss();
-        mViewPager.setCurrentItem(TabHost.DETAILS_TAB_POS);
-        if (!errorOccurred) {
-            ToastUtil.showShortToast(this,
-                    ToastUtil.ToastType.SUCCESS,
-                    R.string.synchronize_patient_successful);
-        } else {
-            ToastUtil.showShortToast(this,
-                    ToastUtil.ToastType.ERROR,
-                    R.string.synchronize_patient_error);
+        if (mDialogAction == DialogAction.SYNCHRONIZE) {
+            mViewPager.setCurrentItem(TabHost.DETAILS_TAB_POS);
+            if (!errorOccurred) {
+                ToastUtil.showShortToast(this,
+                        ToastUtil.ToastType.SUCCESS,
+                        R.string.synchronize_patient_successful);
+            } else {
+                ToastUtil.showShortToast(this,
+                        ToastUtil.ToastType.ERROR,
+                        R.string.synchronize_patient_error);
+            }
+        } else if (mDialogAction == DialogAction.ADD_VISIT) {
+            List<Fragment> fragments = getSupportFragmentManager().getFragments();
+            recreateFragmentView(fragments.get(TabHost.VISITS_TAB_POS));
+            if (!errorOccurred) {
+                ToastUtil.showShortToast(this,
+                        ToastUtil.ToastType.SUCCESS,
+                        R.string.start_visit_successful);
+            } else {
+                ToastUtil.showShortToast(this,
+                        ToastUtil.ToastType.ERROR,
+                        R.string.start_visit_error);
+            }
         }
     }
 
@@ -213,7 +237,7 @@ public class PatientDashboardActivity extends ACBaseActivity implements ActionBa
                 case TabHost.DIAGNOSIS_TAB_POS:
                     return PatientDiagnosisFragment.newInstance(mPatient.getId());
                 case TabHost.VISITS_TAB_POS:
-                    return PatientVisitsFragment.newInstance(mPatient.getId());
+                    return PatientVisitsFragment.newInstance(mPatient);
                 case TabHost.VITALS_TAB_POS:
                     return PatientVitalsFragment.newInstance(mPatient.getId());
                 default:
@@ -228,7 +252,7 @@ public class PatientDashboardActivity extends ACBaseActivity implements ActionBa
 
     }
 
-    private final class TabHost {
+    public final class TabHost {
         public static final int DETAILS_TAB_POS = 0;
         public static final int DIAGNOSIS_TAB_POS = 1;
         public static final int VISITS_TAB_POS = 2;

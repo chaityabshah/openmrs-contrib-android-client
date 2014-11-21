@@ -15,6 +15,7 @@
 package org.openmrs.client.net;
 
 import android.content.Context;
+import android.support.v4.app.FragmentManager;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -27,7 +28,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.openmrs.client.activities.PatientDashboardActivity;
 import org.openmrs.client.activities.VisitDashboardActivity;
+import org.openmrs.client.activities.fragments.PatientVisitsFragment;
+import org.openmrs.client.application.OpenMRS;
+import org.openmrs.client.dao.LocationDAO;
 import org.openmrs.client.dao.VisitDAO;
+import org.openmrs.client.models.Patient;
 import org.openmrs.client.models.Visit;
 import org.openmrs.client.models.mappers.VisitMapper;
 import org.openmrs.client.utilities.DateUtils;
@@ -47,7 +52,7 @@ public class VisitsManager extends BaseManager {
         super(context);
     }
 
-    public void findActiveVisitsForPatientByUUID(final String patientUUID, final long patientID) {
+    public void findVisitsByPatientUUID(final String patientUUID, final long patientID) {
         RequestQueue queue = Volley.newRequestQueue(mContext);
         String visitURL = mOpenMRS.getServerUrl() + API.COMMON_PART + VISIT_QUERY + patientUUID;
         logger.d(SENDING_REQUEST + visitURL);
@@ -176,6 +181,83 @@ public class VisitsManager extends BaseManager {
         }
 
         );
+
+        queue.add(jsObjRequest);
+    }
+
+    public void createVisit(final Patient patient) {
+        RequestQueue queue = Volley.newRequestQueue(mContext);
+        String visitURL = mOpenMRS.getServerUrl() + API.COMMON_PART + API.VISIT_DETAILS;
+        logger.d("Sending request to : " + visitURL);
+
+        final String currentDate = DateUtils.convertTime(System.currentTimeMillis(), DateUtils.OPEN_MRS_REQUEST_FORMAT);
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("patient", patient.getUuid());
+        params.put("visitType", OpenMRS.getInstance().getVisitTypeUUID());
+        params.put("startDatetime", currentDate);
+        params.put("location", LocationDAO.findLocationByName(OpenMRS.getInstance().getLocation()).getParentLocationUuid());
+
+        JsonObjectRequestWrapper jsObjRequest = new JsonObjectRequestWrapper(Request.Method.POST, visitURL, new JSONObject(params), new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(final JSONObject response) {
+                logger.d(response.toString());
+
+                try {
+                    Visit visit = VisitMapper.map(response);
+                    long visitID = new VisitDAO().saveVisit(visit, patient.getId());
+                    FragmentManager fm = ((PatientDashboardActivity) mContext).getSupportFragmentManager();
+                    PatientVisitsFragment fragment = (PatientVisitsFragment) fm
+                            .getFragments().get(PatientDashboardActivity.TabHost.VISITS_TAB_POS);
+                    fragment.visitStarted(visitID, visitID <= 0);
+                } catch (JSONException e) {
+                    logger.d(e.toString());
+                }
+            }
+        }
+                , new GeneralErrorListenerImpl(mContext) {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                super.onErrorResponse(error);
+                ((PatientDashboardActivity) mContext).stopLoader(true);
+            }
+        }
+
+        ) {
+        };
+
+        queue.add(jsObjRequest);
+    }
+
+    public void getVisitType() {
+        RequestQueue queue = Volley.newRequestQueue(mContext);
+        String visitTypeURL = mOpenMRS.getServerUrl() + API.COMMON_PART + API.VISIT_TYPE;
+        logger.d("Sending request to : " + visitTypeURL);
+
+        JsonObjectRequestWrapper jsObjRequest = new JsonObjectRequestWrapper(Request.Method.GET, visitTypeURL, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(final JSONObject response) {
+                logger.d(response.toString());
+
+                try {
+                    JSONArray visitTypesObj = response.getJSONArray("results");
+                    String visitTypeUUID = ((JSONObject) visitTypesObj.get(0)).getString("uuid");
+                    OpenMRS.getInstance().setVisitTypeUUID(visitTypeUUID);
+                } catch (JSONException e) {
+                    logger.d(e.toString());
+                }
+            }
+        }
+                , new GeneralErrorListenerImpl(mContext) {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                super.onErrorResponse(error);
+            }
+        }
+
+        ) {
+        };
 
         queue.add(jsObjRequest);
     }
