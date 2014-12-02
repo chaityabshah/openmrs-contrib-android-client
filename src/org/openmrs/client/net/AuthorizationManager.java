@@ -27,6 +27,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.openmrs.client.activities.LoginActivity;
 import org.openmrs.client.databases.OpenMRSSQLiteOpenHelper;
+import org.openmrs.client.net.volley.wrappers.JsonObjectRequestWrapper;
 import org.openmrs.client.utilities.ApplicationConstants;
 
 import java.util.HashMap;
@@ -46,7 +47,7 @@ public class AuthorizationManager extends BaseManager {
     public void login(final String username, final String password) {
         RequestQueue queue = Volley.newRequestQueue(mContext);
         encodeAuthorizationToken(username, password);
-        String loginURL = mOpenMRS.getServerUrl() + API.COMMON_PART + API.AUTHORISATION_END_POINT;
+        String loginURL = mOpenMRS.getServerUrl() + API.REST_ENDPOINT + API.AUTHORISATION_END_POINT;
 
         logger.i("Sending request to : " + loginURL);
 
