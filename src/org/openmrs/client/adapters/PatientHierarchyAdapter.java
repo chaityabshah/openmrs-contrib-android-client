@@ -24,7 +24,6 @@ import android.widget.TextView;
 
 import org.openmrs.client.R;
 import org.openmrs.client.models.Patient;
-import org.openmrs.client.net.FormsManger;
 import org.openmrs.client.utilities.DateUtils;
 import org.openmrs.client.utilities.FontsUtil;
 
@@ -88,13 +87,12 @@ public class PatientHierarchyAdapter extends ArrayAdapter<Patient> {
             @Override
             public void onClick(View v) {
                 try {
-                    new FormsManger(mContext).getAvailableFormsList();
-//                    Intent intent = new Intent(mContext, FormEntryActivity.class);
-//                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//                    Uri formURI = new FormsDAO(mContext.getContentResolver()).getFormURI(
-//                            OpenMRS.getInstance().getDefaultFormLoadID(FormsLoaderUtil.CAPTURE_VITALS_FORM_NAME));
-//                    intent.setData(formURI);
-//                    mContext.startActivity(intent);
+                    Intent intent = new Intent(mContext, FormEntryActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    Uri formURI = new FormsDAO(mContext.getContentResolver()).getFormURI(
+                            OpenMRS.getInstance().getDefaultFormLoadID(FormsLoaderUtil.CAPTURE_VITALS_FORM_NAME));
+                    intent.setData(formURI);
+                    mContext.startActivity(intent);
                 } catch (Exception e) {
                     
                 }

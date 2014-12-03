@@ -49,7 +49,7 @@
             <xf:instance id="openmrs_model_instance">
 
 
-                <form name="Vitals XForm" id="8" uuid="23dc6e43-a21f-4264-afa6-b28348f782f1"
+                <form name="Default Vitals XForm" id="0" uuid="23dc6e43-a21f-4264-afa6-b28348f782f1"
                       version="1.0"
                       xmlns:openmrs="formentry.infopath_server_url cannot be empty/moduleServlet/formentry/forms/schema/8-1"
                       xmlns:xd="http://schemas.microsoft.com/office/infopath/2003">
