@@ -29,9 +29,11 @@ import org.openmrs.client.activities.FormEntryActivity;
 import org.openmrs.client.application.OpenMRS;
 import org.openmrs.client.dao.FormsDAO;
 import org.openmrs.client.models.Patient;
+import org.openmrs.client.utilities.ApplicationConstants;
 import org.openmrs.client.utilities.DateUtils;
 import org.openmrs.client.utilities.FontsUtil;
 import org.openmrs.client.utilities.FormsLoaderUtil;
+import org.openmrs.client.utilities.ToastUtil;
 
 import java.util.List;
 
@@ -57,7 +59,7 @@ public class PatientHierarchyAdapter extends ArrayAdapter<Patient> {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, ViewGroup parent) {
         View rowView = convertView;
         // reuse views
         if (rowView == null) {
@@ -98,9 +100,11 @@ public class PatientHierarchyAdapter extends ArrayAdapter<Patient> {
                     Uri formURI = new FormsDAO(mContext.getContentResolver()).getFormURI(
                             OpenMRS.getInstance().getDefaultFormLoadID(FormsLoaderUtil.CAPTURE_VITALS_FORM_NAME));
                     intent.setData(formURI);
+                    intent.putExtra(ApplicationConstants.BundleKeys.PATIENT_UUID_BUNDLE, mItems.get(position).getUuid());
                     mContext.startActivity(intent);
                 } catch (Exception e) {
-                    
+                    ToastUtil.showLongToast(getContext(), ToastUtil.ToastType.ERROR, R.string.failed_to_open_vitals_form);
+                    OpenMRS.getInstance().getOpenMRSLogger().d(e.toString());
                 }
             }
 

@@ -14,6 +14,7 @@
 
 package org.openmrs.client.activities;
 
+import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -25,9 +26,28 @@ import org.odk.collect.android.widgets.SelectOneWidget;
 import org.odk.collect.android.widgets.StringWidget;
 import org.openmrs.client.application.OpenMRS;
 import org.openmrs.client.models.Mapping;
+import org.openmrs.client.utilities.ApplicationConstants;
 import org.openmrs.client.utilities.MappingSolver;
 
 public class FormEntryActivity extends org.odk.collect.android.activities.FormEntryActivity {
+
+    private String mPatientUUID;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (null != savedInstanceState) {
+            mPatientUUID = savedInstanceState.getString(ApplicationConstants.BundleKeys.PATIENT_UUID_BUNDLE);
+        } else {
+            mPatientUUID = getIntent().getExtras().getString(ApplicationConstants.BundleKeys.PATIENT_UUID_BUNDLE);
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putString(ApplicationConstants.BundleKeys.PATIENT_UUID_BUNDLE, mPatientUUID);
+        super.onSaveInstanceState(outState);
+    }
 
     @Override
     protected View createView(int event, boolean advancingPage) {
@@ -51,7 +71,7 @@ public class FormEntryActivity extends org.odk.collect.android.activities.FormEn
 
     private void setMapping(QuestionWidget qWidget) {
         String questionName = getQuestionName(qWidget.getPrompt());
-        for (Mapping mapping : MappingSolver.getFormMapping(mFormName)) {
+        for (Mapping mapping : MappingSolver.getFormMapping(mFormName, mPatientUUID)) {
             if (questionName.contains(mapping.getQuestion())) {
                 try {
                     if (qWidget instanceof StringWidget) {
