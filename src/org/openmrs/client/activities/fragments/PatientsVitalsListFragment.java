@@ -61,7 +61,7 @@ public class PatientsVitalsListFragment extends Fragment {
         if (savedInstanceStateToReadFrom == null) {
             savedInstanceStateToReadFrom = getArguments();
         }
-        mPatientList = ((PatientListBundle)savedInstanceStateToReadFrom.getSerializable(ApplicationConstants.BundleKeys.PATINET_LIST)).getPatients();
+        mPatientList = ((PatientListBundle) savedInstanceStateToReadFrom.getSerializable(ApplicationConstants.BundleKeys.PATINET_LIST)).getPatients();
     }
 
     @Override

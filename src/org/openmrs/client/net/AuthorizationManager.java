@@ -66,6 +66,7 @@ public class AuthorizationManager extends BaseManager {
                         }
                         mOpenMRS.setSessionToken(sessionToken);
                         mOpenMRS.setUsername(username);
+                        new UserManager(mContext).getUserInformation(username);
                         ((LoginActivity) mContext).saveLocationsToDatabase();
                         ((LoginActivity) mContext).finish();
                     } else {

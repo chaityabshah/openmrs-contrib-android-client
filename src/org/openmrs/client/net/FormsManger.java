@@ -16,6 +16,7 @@ package org.openmrs.client.net;
 
 import android.content.Context;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -42,6 +43,8 @@ import java.util.List;
 import static org.openmrs.client.utilities.ApplicationConstants.API;
 
 public class FormsManger extends BaseManager {
+    public static final String FORM_KEY = "form";
+    public static final String URL_KEY = "url";
     private StringRequestDecorator mRequestDecorator;
 
     public FormsManger(Context context) {
@@ -92,6 +95,28 @@ public class FormsManger extends BaseManager {
         queue.add(mRequestDecorator);
     }
 
+    public void uploadXForm(final String form) {
+        RequestQueue queue = Volley.newRequestQueue(mContext);
+        String xFormsListURL = mOpenMRS.getServerUrl() + API.XFORM_UPLOAD;
+        mRequestDecorator = new StringRequestDecorator(Request.Method.POST, xFormsListURL,
+                new Response.Listener<String>()
+                {
+                    @Override
+                    public void onResponse(String response) {
+                        mOpenMRS.getOpenMRSLogger().d(response.toString());
+                    }
+                },
+                new GeneralErrorListenerImpl(mContext)
+        ) {
+            @Override
+            public byte[] getBody() throws AuthFailureError {
+                return form.getBytes();
+            }
+        };
+
+        queue.add(mRequestDecorator);
+    }
+
     private List<FormDetails> getFormDetails(Document xFormsDoc) {
         List<FormDetails> formList = new ArrayList<FormDetails>();
         int nElements = xFormsDoc.getChildCount();
@@ -112,14 +137,14 @@ public class FormsManger extends BaseManager {
                     continue;
                 }
                 Element child = xFormElement.getElement(j);
-                if (child.getName().equals("form")) {
+                if (FORM_KEY.equals(child.getName())) {
                     formName = child.getText(0);
                     if (formName != null && formName.length() == 0) {
                         formName = null;
                     }
                 }
                 // zero value cause url is the only attribute
-                if (child.getAttributeName(0).equals("url")) {
+                if (URL_KEY.equals(child.getAttributeName(0))) {
                     formUrl = child.getAttributeValue(0);
                     formUrl = formUrl.substring(formUrl.lastIndexOf('/') + 1);
                     if (formUrl.length() == 0) {

@@ -15,6 +15,8 @@
 package org.openmrs.client.adapters;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,9 +25,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.openmrs.client.R;
+import org.openmrs.client.activities.FormEntryActivity;
+import org.openmrs.client.application.OpenMRS;
+import org.openmrs.client.dao.FormsDAO;
 import org.openmrs.client.models.Patient;
 import org.openmrs.client.utilities.DateUtils;
 import org.openmrs.client.utilities.FontsUtil;
+import org.openmrs.client.utilities.FormsLoaderUtil;
 
 import java.util.List;
 
